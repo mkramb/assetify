@@ -6,7 +6,7 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 
-var file = require('./lib/file');
+var ast = require('./lib/ast');
 var less = require('./lib/less');
 var coffee = require('./lib/coffee');
 
@@ -36,7 +36,7 @@ Assetify.prototype.process = function (callback) {
       item.source = coffee.compile(item.source);
     }
 
-    item.source = file.transform(
+    item.source = ast.loadFiles(
       item.source, path.dirname(filePath)
     );
     
@@ -48,16 +48,10 @@ Assetify.prototype.process = function (callback) {
         '%s/%s', self.opts.basedir, item.stylesheet
       ));
 
-      if (item.stylesheet.indexOf('.less') > 0) {
-        less.compile(stylesheetPath, function(content) {
-          item.stylesheet = content;
-          done();
-        });
-      }
-      else {
-        item.stylesheet = fs.readFileSync(filePath, 'utf-8')
+      less.compile(stylesheetPath, function(content) {
+        item.stylesheet = content;
         done();
-      }
+      });
     }
   }, function(err) {
       if (err) throw err;
