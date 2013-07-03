@@ -123,7 +123,6 @@ Assetify.prototype.bundleJS = function (output) {
   );
 
   if (self.opts.compress) {
-
     build = uglifyJS.minify(build, {
       fromString: true
     }).code;
