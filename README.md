@@ -1,0 +1,4 @@
+assetify
+========
+
+Assets manager
