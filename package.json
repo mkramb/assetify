@@ -10,7 +10,8 @@
     "less": "~1.4.0",
     "optimist": "~0.6.0",
     "module-deps": "~0.13.0",
-    "coffee-script": "~1.6.3"
+    "coffee-script": "~1.6.3",
+    "falafel": "~0.2.1"
   },
   "repository": {
     "type": "git",
