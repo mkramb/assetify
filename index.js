@@ -133,7 +133,3 @@ Assetify.prototype.bundleCSS = function (output) {
     if (err) throw err;
   });
 };
-
-Assetify.prototype.isCoffee = function (file) {
-    return /\.((lit)?coffee|coffee\.md)$/.test(file);
-};
