@@ -29,12 +29,15 @@ var b = assetify({
   basedir: argv.baseDir
 });
 
-b.process(function() {
-  if (argv.outputTree) {
-    console.log(JSON.stringify(b.tree, null, 2));
-    process.exit(0);
-  }
+if (argv.outputTree) {
+  console.log(JSON.stringify(b.tree, null, 2));
+  process.exit(0);
+}
 
-  b.bundleJS(argv.outputJS);
+b.process(function() {
   b.bundleCSS(argv.outputCSS);
+
+  if (!argv.outputCSS || argv.outputJS) {
+    b.bundleJS(argv.outputJS);
+  }  
 });

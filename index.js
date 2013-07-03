@@ -27,45 +27,60 @@ function Assetify (opts) {
 Assetify.prototype.process = function (callback) {
   var self = this;
 
-  async.forEach(self.tree, function(item, cb) {
-    if (!item.css) {
-      return cb();
+  async.forEach(self.tree, function(item, done) {
+    var filePath = path.resolve(util.format(
+      '%s/%s', self.opts.basedir, item.id
+    ));
+
+    if (coffee.isCoffee(item.id)) {
+      item.source = coffee.compile(item.source);
     }
 
-    less.compile(item.css, function(content) {
-      item.css = content;
-      cb();
-    });
+    item.source = file.transform(
+      item.source, path.dirname(filePath)
+    );
+    
+    if (!item.stylesheet) {
+      return done();
+    }
+    else {
+      var stylesheetPath = path.resolve(util.format(
+        '%s/%s', self.opts.basedir, item.stylesheet
+      ));
+
+      if (item.stylesheet.indexOf('.less') > 0) {
+        less.compile(stylesheetPath, function(content) {
+          item.stylesheet = content;
+          done();
+        });
+      }
+      else {
+        item.stylesheet = fs.readFileSync(filePath, 'utf-8')
+        done();
+      }
+    }
   }, function(err) {
       if (err) throw err;
       if (callback) callback();
   });
 };
 
-Assetify.prototype.walk = function (filename, parent) {
+Assetify.prototype.walk = function (fileName, parentNode) {
   var self = this;
-  var filename = path.normalize(
-    filename ? filename : self.opts.entry
+  var fileName = path.normalize(
+    fileName ? fileName : self.opts.entry
   );
 
-  if (self.visited[filename]) return;
-  self.visited[filename] = true;
+  if (self.visited[fileName]) return;
+  self.visited[fileName] = true;
 
-  var filepath = path.resolve(util.format(
-    '%s/%s', self.opts.basedir, filename
+  var filePath = path.resolve(util.format(
+    '%s/%s', self.opts.basedir, fileName
   ));
 
-  var source = fs.readFileSync(filepath, 'utf-8');
-
-  if (coffee.isCoffee(filename)) {
-    source = coffee.compile(source);
-  }
-
   var current = {
-    id: filename, deps: {},
-    source: file.transform(
-      source, path.dirname(filepath)
-    )
+    id: fileName, deps: {},
+    source: fs.readFileSync(filePath, 'utf-8')
   };
 
   var deps = detective(current.source);
@@ -75,24 +90,26 @@ Assetify.prototype.walk = function (filename, parent) {
     current.deps[++index] = path.normalize(file);
   });
 
-  if (!parent) {
+  if (!parentNode) {
     current.entry = true;
   }
 
-  var less = path.resolve(util.format(
-    '%s/%s.less', self.opts.basedir, filename.slice(
-      0, filename.length - path.extname(filename).length
-    )
+  var lessName = util.format('%s.less', fileName.slice(
+    0, fileName.length - path.extname(fileName).length
   ));
 
-  if (fs.existsSync(less)) {
-    current.css = less;
+  var lessPath = path.resolve(util.format(
+    '%s/%s', self.opts.basedir, lessName
+  ));
+
+  if (fs.existsSync(lessPath)) {
+    current.stylesheet = lessName;
   }
 
   self.tree.push(current);
 
-  deps.forEach(function (filename) {
-    self.walk(filename, current);
+  deps.forEach(function (fileName) {
+    self.walk(fileName, current);
   });
 };
 
@@ -128,8 +145,8 @@ Assetify.prototype.bundleCSS = function (output) {
   }
 
   self.tree.forEach(function(item) {
-    if (item.css) {
-      self.css.push(item.css);
+    if (item.stylesheet) {
+      self.css.push(item.stylesheet);
     }
   });
 
