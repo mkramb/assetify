@@ -10,8 +10,7 @@ module.exports = {
         "1": "b.js"
       },
       "source": "var b = require('b.js');\n\nmodule.exports = function (n) { \n  console.log(b(n));\n}",
-      "entry": true,
-      "stylesheet": "a.less"
+      "entry": true
     },
     {
       "id": "b.js",

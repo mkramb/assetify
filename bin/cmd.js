@@ -11,6 +11,7 @@ if (argv.help) {
     " --outputJS=<filepath>",
     " --outputCSS=<filepath>",
     " --outputTree",
+    " --compress",
     " --help\n"
   ].join("\n"));
   process.exit();
@@ -26,7 +27,8 @@ if (!argv.entryPoint || !argv.baseDir) {
 
 var b = assetify({
   entry: argv.entryPoint,
-  basedir: argv.baseDir
+  basedir: argv.baseDir,
+  compress: !!argv.compress
 });
 
 if (argv.outputTree) {

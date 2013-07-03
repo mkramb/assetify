@@ -1,4 +1,5 @@
 var detective = require('detective');
+var uglifyJS = require("uglify-js");
 var pack = require('browser-pack');
 var async = require('async');
 
@@ -39,28 +40,38 @@ Assetify.prototype.process = function (callback) {
     item.source = ast.loadFiles(
       item.source, path.dirname(filePath)
     );
-    
-    if (!item.stylesheet) {
-      return done();
-    }
-    else {
-      var stylesheetPath = path.resolve(util.format(
-        '%s/%s', self.opts.basedir, item.stylesheet
-      ));
 
-      less.compile(stylesheetPath, function(content) {
-        item.stylesheet = content;
-        done();
-      });
-    }
+    item.source = ast.loadStylesheets(
+      item.source, path.dirname(filePath), function(stylesheetPaths) {
+        if (!stylesheetPaths.length) {
+          done();
+        }
+
+        stylesheetPaths.forEach(function(stylesheetPath) {
+          less.compile(stylesheetPath, self.opts.compress,
+            function(content) {
+              if (content) {
+                item.stylesheet = content;
+              }
+
+              done();
+            }
+          );
+        });
+      }
+    );
   }, function(err) {
       if (err) throw err;
-      if (callback) callback();
+
+      if (callback) {
+        callback();
+      }
   });
 };
 
 Assetify.prototype.walk = function (fileName, parentNode) {
   var self = this;
+
   var fileName = path.normalize(
     fileName ? fileName : self.opts.entry
   );
@@ -88,18 +99,6 @@ Assetify.prototype.walk = function (fileName, parentNode) {
     current.entry = true;
   }
 
-  var lessName = util.format('%s.less', fileName.slice(
-    0, fileName.length - path.extname(fileName).length
-  ));
-
-  var lessPath = path.resolve(util.format(
-    '%s/%s', self.opts.basedir, lessName
-  ));
-
-  if (fs.existsSync(lessPath)) {
-    current.stylesheet = lessName;
-  }
-
   self.tree.push(current);
 
   deps.forEach(function (fileName) {
@@ -107,7 +106,7 @@ Assetify.prototype.walk = function (fileName, parentNode) {
   });
 };
 
-Assetify.prototype.bundleJS = function (output) {
+Assetify.prototype.bundleJS = function (output) {  
   var self = this;
 
   var source = '';
@@ -118,7 +117,17 @@ Assetify.prototype.bundleJS = function (output) {
   });
 
   p.write(JSON.stringify(self.tree));
-  var build = util.format("require = %s }, {}, []);", source)
+
+  var build = util.format(
+    "require = %s }, {}, []);", source
+  );
+
+  if (self.opts.compress) {
+
+    build = uglifyJS.minify(build, {
+      fromString: true
+    }).code;
+  }
 
   if (output) {
     fs.writeFile(output, build, function(err) {
@@ -132,8 +141,8 @@ Assetify.prototype.bundleJS = function (output) {
 
 Assetify.prototype.bundleCSS = function (output) {
   var self = this;
-
   self.css = [];
+
   if (!output) {
     return;
   }
