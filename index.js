@@ -6,8 +6,8 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 
-var less = require('./less');
-var coffee = require('./coffee');
+var less = require('./lib/less');
+var coffee = require('./lib/coffee');
 
 module.exports = function (opts) {
   return new Assetify(opts);

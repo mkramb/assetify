@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var argv = require('optimist').argv;
-var assetify = require('./index');
+var assetify = require('./../index');
 
 if (!argv.entryPoint || !argv.baseDir) {
   process.stderr.write("Please provide --entryPoint=<file> and -baseDir=<directory>\n");
