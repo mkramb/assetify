@@ -6,6 +6,7 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 
+var file = require('./lib/file');
 var less = require('./lib/less');
 var coffee = require('./lib/coffee');
 
@@ -23,12 +24,15 @@ function Assetify (opts) {
   self.walk();
 }
 
-Assetify.prototype.process = function(callback) {
+Assetify.prototype.process = function (callback) {
   var self = this;
 
   async.forEach(self.tree, function(item, cb) {
-    if (!item.css) return cb();
-    less(item.css, function(content) {
+    if (!item.css) {
+      return cb();
+    }
+
+    less.compile(item.css, function(content) {
       item.css = content;
       cb();
     });
@@ -52,20 +56,24 @@ Assetify.prototype.walk = function (filename, parent) {
   ));
 
   var source = fs.readFileSync(filepath, 'utf-8');
-  var deps = detective(source);
 
-  var resolved = {};
+  if (coffee.isCoffee(filename)) {
+    source = coffee.compile(source);
+  }
+
+  var current = {
+    id: filename, deps: {},
+    source: file.transform(
+      source, path.dirname(filepath)
+    )
+  };
+
+  var deps = detective(current.source);
   var index = 0;
 
   deps.forEach(function (file) {
-    resolved[++index] = path.normalize(file);
+    current.deps[++index] = path.normalize(file);
   });
-
-  var current = {
-    id: filename, 
-    source: source,
-    deps: resolved
-  };
 
   if (!parent) {
     current.entry = true;
@@ -79,10 +87,6 @@ Assetify.prototype.walk = function (filename, parent) {
 
   if (fs.existsSync(less)) {
     current.css = less;
-  }
-
-  if (coffee.isCoffee(filename)) {
-    current.source = coffee.compile(current.source);
   }
 
   self.tree.push(current);
