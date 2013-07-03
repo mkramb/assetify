@@ -1,0 +1,21 @@
+{
+  "name": "assetify",
+  "version": "0.0.1",
+  "description": "Assets manager",
+  "main": "index.js",
+  "dependencies": {
+    "async": "~0.2.9",
+    "browser-pack": "~0.9.2",
+    "detective": "~2.1.2",
+    "less": "~1.4.0",
+    "optimist": "~0.6.0",
+    "module-deps": "~0.13.0",
+    "coffee-script": "~1.6.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mkramb/assetify.git"
+  },
+  "author": "Mitja Kramberger",
+  "license": "BSD"
+}
