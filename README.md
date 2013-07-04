@@ -16,6 +16,7 @@ Assets manager
     bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputTree
     bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputJS=./b.js --outputCSS=./b.css
     bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputJS=./b.js --outputCSS=./b.css --compress
+    bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputJS=./b.js --outputCSS=./b.css --watchFiles
 
 **Directives**
 
