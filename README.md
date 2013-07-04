@@ -17,7 +17,14 @@ Assets manager
 
 **Directives**
 
-    require('a.js') // follows CommonJS modules (like browserify)
-    require('a.coffee') // compiles to javascript on the fly
-    requireStylesheet('a.less') // adds stylesheet to CSS build
-    requireFile('a.html') // replaces function call with loaded string
+    // follows CommonJS modules (like browserify)
+    require('a.js')
+
+    // compiles to javascript on the fly
+    require('a.coffee')
+
+    // adds LESS stylesheet to CSS build
+    require.stylesheet('a.less') 
+
+    // replaces function call with loaded string
+    require.file('a.html')

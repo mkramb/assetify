@@ -8,8 +8,8 @@ var path = require('path');
 var fs = require('fs');
 
 var ast = require('./lib/ast');
-var less = require('./lib/less');
 var coffee = require('./lib/coffee');
+var stylesheet = require('./lib/stylesheet');
 
 module.exports = function (opts) {
   return new Assetify(opts);
@@ -37,35 +37,44 @@ Assetify.prototype.process = function (callback) {
       item.source = coffee.compile(item.source);
     }
 
-    item.source = ast.loadFiles(
-      item.source, path.dirname(filePath)
-    );
-
-    item.source = ast.loadStylesheets(
-      item.source, path.dirname(filePath), function(stylesheetPaths) {
-        if (!stylesheetPaths.length) {
+    item.source = ast.transform(
+      item.source, path.dirname(filePath), function(results) {
+        if (!results.length) {
           done();
         }
+        else {
+          var count = 0;
 
-        stylesheetPaths.forEach(function(stylesheetPath) {
-          less.compile(stylesheetPath, self.opts.compress,
-            function(content) {
-              if (content) {
-                item.stylesheet = content;
+          async.whilst(
+            function () {
+              return results.length > count;
+            },
+            function (callback) {
+              var result = results[count];
+
+              if (result && result.stylesheet) {
+                stylesheet.compile(result.stylesheet, self.opts.compress, 
+                  function(content) {
+                    item.stylesheet = content;
+                    count++, callback();
+                  }
+                );
               }
-
+            },
+            function (err) {
               done();
             }
           );
-        });
+        }
       }
     );
-  }, function(err) {
-      if (err) throw err;
+  },
+  function(err) {
+    if (err) throw err;
 
-      if (callback) {
-        callback();
-      }
+    if (callback) {
+      callback();
+    }
   });
 };
 
