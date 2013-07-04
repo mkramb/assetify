@@ -9,7 +9,7 @@ Assets manager
 
     npm test
 
-**Example usage**
+**Usage**
 
     bin/cmd.js --help
     bin/cmd.js --baseDir=./test --entryPoint=./a.js
