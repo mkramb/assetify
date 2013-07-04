@@ -23,19 +23,76 @@ inherits(Assetify, EventEmitter);
 function Assetify (opts) {
   var self = this;
 
-  self.visited = [];
   self.opts = opts;
+  clean();
 
-  self.tree = [];
-  self.globals = {
-    stylesheet: {
-      style: [],
-      vars: []
-    }
+  function clean () {
+    self.visited = [];
+    self.tree = [];
+    self.globals = {
+      stylesheet: {
+        style: [],
+        vars: []
+      }
+    };
   };
+
+  self.on('update', function () {
+    clean();
+    self.walk();
+
+    self.process(function() {
+      self.bundleCSS(self.opts.argv.outputCSS);
+
+      if (!self.opts.argv.outputCSS || self.opts.argv.outputJS) {
+        self.bundleJS(self.opts.argv.outputJS);
+      }  
+    });
+  });
 
   self.walk();
 }
+
+Assetify.prototype.walk = function (fileName, parentNode) {
+  var self = this;
+
+  var fileName = path.normalize(
+    fileName ? fileName : self.opts.entry
+  );
+
+  if (self.visited[fileName]) return;
+  self.visited[fileName] = true;
+
+  var filePath = path.resolve(util.format(
+    '%s/%s', self.opts.basedir, fileName
+  ));
+
+  var current = {
+    id: fileName, deps: {},
+    source: fs.readFileSync(filePath, 'utf-8')
+  };
+
+  if (coffee.isCoffee(current.id)) {
+    current.source = coffee.compile(current.source);
+  }
+
+  var deps = detective(current.source);
+  var index = 0;
+
+  deps.forEach(function (file) {
+    current.deps[++index] = path.normalize(file);
+  });
+
+  if (!parentNode) {
+    current.entry = true;
+  }
+
+  self.tree.push(current);
+
+  deps.forEach(function (fileName) {
+    self.walk(fileName, current);
+  });
+};
 
 Assetify.prototype.process = function (callback) {
   var self = this;
@@ -46,7 +103,7 @@ Assetify.prototype.process = function (callback) {
     ));
 
     self.emit('dep', {
-      'javascript': item.id
+      'javascript': filePath
     });
 
     item.source = ast.transform(
@@ -117,47 +174,6 @@ Assetify.prototype.process = function (callback) {
     if (callback) {
       callback();
     }
-  });
-};
-
-Assetify.prototype.walk = function (fileName, parentNode) {
-  var self = this;
-
-  var fileName = path.normalize(
-    fileName ? fileName : self.opts.entry
-  );
-
-  if (self.visited[fileName]) return;
-  self.visited[fileName] = true;
-
-  var filePath = path.resolve(util.format(
-    '%s/%s', self.opts.basedir, fileName
-  ));
-
-  var current = {
-    id: fileName, deps: {},
-    source: fs.readFileSync(filePath, 'utf-8')
-  };
-
-  if (coffee.isCoffee(current.id)) {
-    current.source = coffee.compile(current.source);
-  }
-
-  var deps = detective(current.source);
-  var index = 0;
-
-  deps.forEach(function (file) {
-    current.deps[++index] = path.normalize(file);
-  });
-
-  if (!parentNode) {
-    current.entry = true;
-  }
-
-  self.tree.push(current);
-
-  deps.forEach(function (fileName) {
-    self.walk(fileName, current);
   });
 };
 
