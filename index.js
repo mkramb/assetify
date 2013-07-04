@@ -1,7 +1,10 @@
 var detective = require('detective');
-var uglifyJS = require("uglify-js");
+var uglifyJS = require('uglify-js');
 var pack = require('browser-pack');
 var async = require('async');
+
+var inherits = require('inherits');
+var EventEmitter = require('events').EventEmitter;
 
 var util = require('util');
 var path = require('path');
@@ -14,6 +17,8 @@ var stylesheet = require('./lib/stylesheet');
 module.exports = function (opts) {
   return new Assetify(opts);
 };
+
+inherits(Assetify, EventEmitter);
 
 function Assetify (opts) {
   var self = this;
@@ -40,9 +45,9 @@ Assetify.prototype.process = function (callback) {
       '%s/%s', self.opts.basedir, item.id
     ));
 
-    if (coffee.isCoffee(item.id)) {
-      item.source = coffee.compile(item.source);
-    }
+    self.emit('dep', {
+      'javascript': item.id
+    });
 
     item.source = ast.transform(
       item.source, path.dirname(filePath), function(results) {
@@ -60,6 +65,10 @@ Assetify.prototype.process = function (callback) {
               var result = results[count];
 
               if (result && result.stylesheet) {
+                self.emit('dep', {
+                  'stylesheet': result.stylesheet
+                });
+
                 stylesheet.compile(result.stylesheet, function(tree) {
                   if (result.global) {
                     self.globals.stylesheet.style.push(tree);
@@ -81,8 +90,17 @@ Assetify.prototype.process = function (callback) {
                     }
                   }
 
-                  count++, callback();
+                  count++;
+                  callback();
                 });
+              }
+              if (result && result.file) {
+                self.emit('dep', {
+                  'file': result.file
+                });
+
+                count++;
+                callback();
               }
             },
             function (err) {
@@ -120,6 +138,10 @@ Assetify.prototype.walk = function (fileName, parentNode) {
     id: fileName, deps: {},
     source: fs.readFileSync(filePath, 'utf-8')
   };
+
+  if (coffee.isCoffee(current.id)) {
+    current.source = coffee.compile(current.source);
+  }
 
   var deps = detective(current.source);
   var index = 0;
