@@ -11,6 +11,7 @@ Assets manager
 
 **Example usage**
 
+    bin/cmd.js --help
     bin/cmd.js --baseDir=./test --entryPoint=./a.js
     bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputTree
     bin/cmd.js --baseDir=./test --entryPoint=./a.js --outputJS=./b.js --outputCSS=./b.css
