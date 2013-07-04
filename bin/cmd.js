@@ -4,7 +4,7 @@ var fs = require('fs');
 var util = require('util');
 
 var argv = require('optimist')
-  .default('watchTimeout', 1000).argv;
+  .default('watchTimeout', 600).argv;
 
 var assetify = require('./../index');
 
