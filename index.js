@@ -220,19 +220,24 @@ Assetify.prototype.bundleCSS = function (output) {
   var options = stylesheet.getOptions();
   options.yuicompress = options.compress = self.opts.compress;
 
-  self.globals.stylesheet.style.forEach(function(globalTree) {
-    self.css.push(globalTree.toCSS(options));
-  });
+  try {
+    self.globals.stylesheet.style.forEach(function(globalTree) {
+      self.css.push(globalTree.toCSS(options));
+    });
 
-  self.tree.forEach(function(item) {
-    if (item.stylesheet) {
-      self.globals.stylesheet.vars.forEach(function(varRule) {
-        item.stylesheet.rules.unshift(varRule);
-      });
+    self.tree.forEach(function(item) {
+      if (item.stylesheet) {
+        self.globals.stylesheet.vars.forEach(function(varRule) {
+          item.stylesheet.rules.unshift(varRule);
+        });
 
-      self.css.push(item.stylesheet.toCSS(options));
-    }
-  });
+        self.css.push(item.stylesheet.toCSS(options));
+      }
+    });
+  }
+  catch (e) {
+    less.writeError(e);
+  }
 
   fs.writeFile(output, self.css.join(''), function(err) {
     if (err) throw err;
