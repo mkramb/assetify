@@ -55,7 +55,9 @@ Assetify.prototype.process = function (callback) {
               if (result && result.stylesheet) {
                 stylesheet.compile(result.stylesheet, self.opts.compress, 
                   function(content) {
-                    item.stylesheet = content;
+                    item.stylesheet = item.stylesheet ?
+                      (item.stylesheet + content) : content;
+                    
                     count++, callback();
                   }
                 );
