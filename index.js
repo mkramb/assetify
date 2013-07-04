@@ -22,6 +22,13 @@ function Assetify (opts) {
   self.opts = opts;
 
   self.tree = [];
+  self.globals = {
+    stylesheet: {
+      style: [],
+      vars: []
+    }
+  };
+
   self.walk();
 }
 
@@ -53,14 +60,29 @@ Assetify.prototype.process = function (callback) {
               var result = results[count];
 
               if (result && result.stylesheet) {
-                stylesheet.compile(result.stylesheet, self.opts.compress, 
-                  function(content) {
-                    item.stylesheet = item.stylesheet ?
-                      (item.stylesheet + content) : content;
-                    
-                    count++, callback();
+                stylesheet.compile(result.stylesheet, function(tree) {
+                  if (result.global) {
+                    self.globals.stylesheet.style.push(tree);
+
+                    tree.rules.forEach(function(rule) {
+                      if (rule.variable === true) {
+                        self.globals.stylesheet.vars.push(rule);
+                      }
+                    });
                   }
-                );
+                  else {
+                    if (!item.stylesheet) {
+                      item.stylesheet = tree;
+                    }
+                    else {
+                      tree.rules.forEach(function(rule) {
+                        item.stylesheet.rules.push(rule);
+                      });
+                    }
+                  }
+
+                  count++, callback();
+                });
               }
             },
             function (err) {
@@ -157,9 +179,20 @@ Assetify.prototype.bundleCSS = function (output) {
     return;
   }
 
+  var options = stylesheet.getOptions();
+  options.yuicompress = options.compress = self.opts.compress;
+
+  self.globals.stylesheet.style.forEach(function(globalTree) {
+    self.css.push(globalTree.toCSS(options));
+  });
+
   self.tree.forEach(function(item) {
     if (item.stylesheet) {
-      self.css.push(item.stylesheet);
+      self.globals.stylesheet.vars.forEach(function(varRule) {
+        item.stylesheet.rules.unshift(varRule);
+      });
+
+      self.css.push(item.stylesheet.toCSS(options));
     }
   });
 

@@ -25,8 +25,11 @@ Assets manager
     // compiles to javascript on the fly
     require('a.coffee')
 
-    // adds LESS stylesheet to CSS build
-    require.stylesheet('a.less') 
-
     // replaces function call with loaded string
     require.file('a.html')
+
+    // adds LESS stylesheet to CSS build
+    require.less('a.less') 
+
+    // add global LESS stylesheet, which is global (exposes all variables)
+    require.lessGlobal('global.less') 
