@@ -1,5 +1,5 @@
 var detective = require('detective');
-var uglifyJS = require('uglify-js');
+var uglifyJS = require('uglify-js1');
 var pack = require('browser-pack');
 var async = require('async');
 
