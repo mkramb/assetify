@@ -1,7 +1,7 @@
 var detective = require('detective');
 var uglifyJS = require('uglify-js');
 var pack = require('browser-pack');
-var async = require('async');
+var async = require('async');12
 
 var inherits = require('inherits');
 var EventEmitter = require('events').EventEmitter;
